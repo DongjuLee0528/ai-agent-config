@@ -1,0 +1,6 @@
+# Harness template. Copy to $CODEX_HOME/review.config.toml (default
+# $CODEX_HOME is ~/.codex) and run with `codex --profile review` to layer
+# this on top of your base config.toml for one session. Base config.toml
+# keeps model_reasoning_effort = "low" as the default; this profile raises
+# it only when you explicitly ask for a deeper review.
+model_reasoning_effort = "high"

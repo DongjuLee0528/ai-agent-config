@@ -64,9 +64,106 @@ To update the vendored copy, clone the upstream repository into a temporary dire
 
 Graphify is not included as a program, package, generated graph, index, cache, or project configuration. `skills/graphify/SKILL.md` is an independently authored wrapper that documents when and how to use project-local Graphify safely. Graphify source is https://github.com/Graphify-Labs/graphify and is licensed under Apache-2.0. The verified upstream Apache-2.0 license, MIT legacy license, and notice texts are preserved for reference at `licenses/graphify-LICENSE`, `licenses/graphify-LICENSE-MIT`, and `licenses/graphify-NOTICE`.
 
+## Harness
+
+`AGENTS.md` is a set of instructions the model can choose to follow. The harness under `harness/` is a second, independent layer that enforces a small set of the most critical rules at the tool level, so they hold even if the model ignores or misreads `AGENTS.md`, and even in permission modes that skip normal confirmation prompts (Claude Code's `bypassPermissions` / `--dangerously-skip-permissions`, Codex's `never` approval policy). The harness does not replace `AGENTS.md`: it enforces only a narrow set of destructive or hardware-affecting actions; everything else is still governed by `AGENTS.md` and ordinary judgment.
+
+The files under `harness/` are templates only. Nothing in this repository is applied automatically, and installing the harness never modifies files inside this repository. You merge the templates into your own `~/.claude/` and `~/.codex/` configuration by hand, using the commands below.
+
+| Rule | Claude Code | Codex |
+| --- | --- | --- |
+| Block `git commit` | `permissions.deny` in `harness/claude/settings.json` | `forbidden` rule in `harness/codex/rules/harness.rules` |
+| Block `git push` (incl. force) | `permissions.deny` | `forbidden` rule |
+| Block `git reset --hard` | `permissions.deny` | `forbidden` rule |
+| Block `git clean` | `permissions.deny` | `forbidden` rule |
+| Block `rm -rf` | `permissions.deny` | `forbidden` rule |
+| Block reading/editing `.env`, private keys, credential files | `permissions.deny` (`Read` rules; also blocks `Edit`/`Write` on the same path). `.env.example` and `.env.sample` are carved out with `Read(!.env.example)` / `Read(!.env.sample)` gitignore-negation entries so template files stay readable; every other `.env.*` suffix stays blocked. | not covered — execpolicy only governs shell commands, not file reads |
+| Block firmware flash tools (`arduino-cli upload`, `platformio`/`pio upload`, `avrdude`, `esptool`, `st-flash`, `dfu-util`, `openocd`) | `PreToolUse` hook in `harness/claude/hooks/block-hardware-commands.sh` (`permissionDecision: "deny"`) — Claude Code cannot run it at all; the message tells the user to run it manually in their own terminal | `prompt` rule in `harness/codex/rules/harness.rules` — Codex asks the user for approval (see the approval-policy caveat below) |
+| Block direct serial-device writes (`/dev/tty*`, `/dev/cu*`) | same `PreToolUse` hook, matched on the full command text, same `"deny"` decision | not directly matched by execpolicy (prefix-only); covered instead by `sandbox_mode = "workspace-write"` in `harness/codex/config.snippet.toml`, since `/dev/tty*` is outside the workspace and normally falls through to approval (see caveat below) |
+
+Known limits, so the harness isn't mistaken for a sandbox: Claude Code's `Bash` deny rules match the literal command text Claude writes, not the underlying program, so `Bash(rm -rf *)` stops `rm -rf` but not `/bin/rm -rf`, `sh -c 'rm -rf ...'`, or a different argument order like `rm -fr`. Codex's `execpolicy` rules match an argv prefix the same way. Neither is a substitute for OS-level sandboxing; pair them with Claude Code's Bash sandbox or Codex's `workspace-write` sandbox for enforcement that doesn't depend on command text.
+
+`Bash(rm -rf *)` stays broad on purpose — the harness blocks the agent from running any recursive force delete rather than trying to distinguish a destructive path from a safe one. This means the agent also can't clean up build output, `node_modules`, or similar directories on its own; run that cleanup manually yourself.
+
+Codex's `platformio`/`pio` `prompt` rules only match `run -t upload` and `run --target upload` as a fixed token sequence right after `run`, so a plain `pio run` or `pio run -e <env>` build is allowed without a prompt. `prefix_rule` in execpolicy matches a fixed position in argv, not "contains anywhere" — so any other flag between `run` and the target flag is not caught, and neither is the target flag written in some other position. For example, `pio run -e esp32dev -t upload` (an environment flag before `-t upload`) is not matched and runs without a prompt. Treat this as a convenience guard against the common invocation, not a guarantee against every valid PlatformIO argument order.
+
+Claude Code's `permissions.deny` list allows gitignore-style `!` negation entries listed after the pattern they carve an exception out of, but only within the same settings file: `Read(!.env.example)` and `Read(!.env.sample)` (after `Read(.env.*)`) is how the `.env` example/template carve-out above works. The private-key and credential rules (`*.pem`, `*.key`, `id_*`, `.aws/credentials`, `.npmrc`, `.netrc`, `.git-credentials`) are left broad and un-carved on purpose: the same trade-off would also make a project's test fixtures named like real key/credential files unreadable to Claude Code (for example a fixture `id_rsa_test` or a test `.pem`) — that is an accepted false positive, not a bug, since silently narrowing these patterns risks missing a real secret file with an unusual name. Rename test fixtures to avoid the sensitive-looking pattern, or read them yourself, instead of loosening these rules.
+
+Codex's `prompt` rules assume an approval policy that can actually prompt (e.g. `approval_policy = "on-request"`, the default this harness sets). Under `approval_policy = "never"` — set explicitly by some callers, such as claudex-loop builder runs (`skills/claudex-loop/scripts/runner.py` passes `-c approval_policy="never"`) — Codex has no prompt to fall back to: a command that would otherwise be a `prompt` decision is rejected outright instead of asked about, and a sandbox-escaping write such as `/dev/tty*` under `sandbox_mode = "workspace-write"` fails instead of falling through to approval. Either way the action doesn't run, just without a chance to approve it in the moment.
+
+### Install / merge steps
+
+Run these yourself; nothing here is applied for you.
+
+All of these commands are safe to re-run: an existing hook/rules/profile file is left alone (a warning names it instead of overwriting it), and the `settings.json` merge deduplicates by hook command instead of appending a second copy each time.
+
+**Claude Code** — install the hardware hook, then merge deny rules and the hook registration into `~/.claude/settings.json`, without discarding your existing settings, plugins, other hooks, or MCP entries:
+
+```sh
+mkdir -p ~/.claude/hooks
+if [ -e ~/.claude/hooks/block-hardware-commands.sh ]; then
+  echo "Existing file, check before replacing: ~/.claude/hooks/block-hardware-commands.sh"
+else
+  cp ~/ai-agent-config/harness/claude/hooks/block-hardware-commands.sh ~/.claude/hooks/
+  chmod +x ~/.claude/hooks/block-hardware-commands.sh
+fi
+
+mkdir -p ~/.claude
+[ -e ~/.claude/settings.json ] || echo '{}' > ~/.claude/settings.json
+
+jq --arg home "$HOME" -s '
+  .[0] as $base | .[1] as $tmpl |
+  ($tmpl.hooks.PreToolUse | map(.hooks |= map(.command |= sub("\\$HOME"; $home)))) as $tmpl_hooks |
+  ($base.hooks.PreToolUse // []) as $base_hooks |
+  ([$base_hooks[].hooks[]?.command]) as $existing_commands |
+  ($base.permissions.deny // []) as $base_deny |
+  $base
+  | .permissions.deny = ($base_deny + ($tmpl.permissions.deny - $base_deny))
+  | .hooks.PreToolUse = ($base_hooks + ($tmpl_hooks | map(select(([.hooks[].command] - $existing_commands) != []))))
+' ~/.claude/settings.json ~/ai-agent-config/harness/claude/settings.json > /tmp/claude-settings-merged.json
+
+diff ~/.claude/settings.json /tmp/claude-settings-merged.json   # review before applying
+mv /tmp/claude-settings-merged.json ~/.claude/settings.json
+```
+
+The `select(([.hooks[].command] - $existing_commands) != [])` step is the dedupe for hooks: a template `PreToolUse` entry is only appended if at least one of its hook commands isn't already present anywhere in your existing `PreToolUse` list, so re-running this after it already merged once adds nothing new. `permissions.deny` is deduped the same way, with `$base_deny + ($tmpl.permissions.deny - $base_deny)` rather than `unique` — `unique` sorts the array, which would reorder the `Read(!.env.example)` / `Read(!.env.sample)` negation entries ahead of the `Read(.env.*)` pattern they carve an exception out of, and gitignore-negation order matters (a `!` entry only carves out the patterns listed *before* it). The `-` form only ever appends new template entries after whatever's already there, so relative order — and the negation carve-out — survives every re-run. Everything else already in your `settings.json` — plugins, other hooks, `mcpServers`, etc. — passes through untouched because the merge only ever assigns `.permissions.deny` and `.hooks.PreToolUse` on top of `$base`.
+
+If `~/.claude/CLAUDE.md` does not already exist, install the `AGENTS.md` import:
+
+```sh
+[ -e ~/.claude/CLAUDE.md ] && echo "Existing file, check before replacing: ~/.claude/CLAUDE.md" \
+  || cp ~/ai-agent-config/harness/claude/CLAUDE.md ~/.claude/CLAUDE.md
+```
+
+**Codex** — install the execpolicy rules and the optional review profile, then merge the sandbox/approval keys into `~/.codex/config.toml`:
+
+```sh
+mkdir -p ~/.codex/rules
+if [ -e ~/.codex/rules/harness.rules ]; then
+  echo "Existing file, check before replacing: ~/.codex/rules/harness.rules"
+else
+  cp ~/ai-agent-config/harness/codex/rules/harness.rules ~/.codex/rules/harness.rules
+fi
+
+if [ -e ~/.codex/review.config.toml ]; then
+  echo "Existing file, check before replacing: ~/.codex/review.config.toml"
+else
+  cp ~/ai-agent-config/harness/codex/review.config.toml ~/.codex/review.config.toml
+fi
+
+grep -nE '^(sandbox_mode|approval_policy)\s*=' ~/.codex/config.toml \
+  && echo "sandbox_mode/approval_policy already set — edit ~/.codex/config.toml by hand instead of appending" \
+  || cat ~/ai-agent-config/harness/codex/config.snippet.toml >> ~/.codex/config.toml
+```
+
+Use the review profile for one session with `codex --profile review` (raises `model_reasoning_effort` to `high` for that session only; the base config keeps `low` as the default).
+
+These commands assume the repository is cloned at `~/ai-agent-config`; if it is elsewhere, replace `$HOME/ai-agent-config` with the repository's actual absolute path. Files here are copied, not symlinked, so pulling an update to this repository does not update your installed copies by itself. Re-running the commands above after a pull picks up new `permissions.deny` entries and the hook registration in `~/.claude/settings.json` (they merge). It does **not** update the hook script, `harness.rules`, `review.config.toml`, or `CLAUDE.md` themselves, since an existing file there is deliberately left alone — remove or diff-and-replace that specific file yourself first if you want a content change from an update to take effect.
+
 ## Local Source of Truth
 
 - Repository rules: `AGENTS.md`
+- Tool-level enforcement templates: `harness/` (see [Harness](#harness))
 - Shared skill routing and behavior: each top-level `skills/*/SKILL.md`
 - Third-party inventory and obligations: `THIRD_PARTY_NOTICES.md`
 - Third-party license texts: `skills/ponytail/LICENSE`, `skills/frontend-design/LICENSE.txt`, and `licenses/`

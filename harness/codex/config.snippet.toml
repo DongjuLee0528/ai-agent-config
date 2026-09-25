@@ -1,0 +1,22 @@
+# Harness template. Merge these two keys into your real ~/.codex/config.toml;
+# do not point Codex at this file directly. See README.md > Harness for install steps.
+#
+# workspace-write: shell commands may write inside the workspace (and any
+# writable_roots you add) but not elsewhere on disk, so a direct write to
+# /dev/tty* or /dev/cu* is outside the sandbox and falls through to approval.
+# on-request: Codex asks before leaving the sandbox or reaching the network,
+# instead of running everything unattended or asking for every single command.
+#
+# Both of the above assume an approval policy that can actually prompt. Under
+# approval_policy="never" (set explicitly by some callers, e.g. claudex-loop
+# builder runs), there is no prompt to fall through to: a sandbox-escaping
+# write such as /dev/tty* is rejected outright instead of being asked about.
+# See README.md > Harness.
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+
+# Optional: widen the sandbox's writable set beyond the workspace. Left
+# commented out because paths here are machine- and project-specific.
+# [sandbox_workspace_write]
+# writable_roots = ["/absolute/path/you/need"]
+# network_access = false

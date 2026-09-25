@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean *)",
+      "Bash(rm -rf *)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(!.env.example)",
+      "Read(!.env.sample)",
+      "Read(*.pem)",
+      "Read(*.key)",
+      "Read(id_*)",
+      "Read(~/.ssh/**)",
+      "Read(.aws/credentials)",
+      "Read(~/.aws/credentials)",
+      "Read(.npmrc)",
+      "Read(.netrc)",
+      "Read(~/.netrc)",
+      "Read(.git-credentials)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/block-hardware-commands.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

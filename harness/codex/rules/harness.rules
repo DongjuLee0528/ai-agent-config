@@ -1,0 +1,41 @@
+# Harness execpolicy rules. Copy this file into $CODEX_HOME/rules/ (default
+# $CODEX_HOME is ~/.codex); Codex scans every *.rules file under rules/ at
+# startup. See README.md > Harness for install steps.
+#
+# decision="forbidden" hard-blocks the command outright, mirroring the
+# Claude Code permissions.deny list. decision="prompt" requires the user to
+# approve the command before it runs, mirroring the Claude Code hardware
+# PreToolUse hook — but only under an approval policy that can actually
+# prompt (e.g. "on-request"). Under approval_policy="never" (for example
+# claudex-loop builder runs, which set this explicitly) there is no prompt to
+# fall back to, so Codex rejects the command outright instead of asking; see
+# README.md > Harness. Edit the pattern lists below to add or remove commands.
+
+# --- Git safety (mirrors harness/claude/settings.json permissions.deny) ---
+prefix_rule(pattern=["git", "commit"], decision="forbidden", justification="commits must be created by the user, not the agent")
+prefix_rule(pattern=["git", "push"], decision="forbidden", justification="pushes must be performed by the user, not the agent")
+prefix_rule(pattern=["git", "reset", "--hard"], decision="forbidden", justification="discards working-tree changes")
+prefix_rule(pattern=["git", "clean"], decision="forbidden", justification="deletes untracked files")
+prefix_rule(pattern=["rm", "-rf"], decision="forbidden", justification="recursive force delete")
+prefix_rule(pattern=["rm", "-fr"], decision="forbidden", justification="recursive force delete")
+
+# --- Hardware safety (mirrors harness/claude/hooks/block-hardware-commands.sh) ---
+prefix_rule(pattern=["arduino-cli", "upload"], decision="prompt", justification="flashes firmware to a connected device")
+
+# Only the upload target is matched, so plain builds (`pio run`, `pio run -e env`)
+# stay allowed. prefix_rule only matches a fixed-position token sequence starting
+# at argv[0] (see harness/codex/rules/harness.rules comment in README > Harness),
+# so these four rules only catch "-t upload" / "--target upload" immediately after
+# "run". Any other flag between "run" and the target flag (e.g.
+# `pio run -e esp32dev -t upload`, or `--target` written before `-e`) is not
+# matched and runs unprompted. See README > Harness for the documented gap.
+prefix_rule(pattern=["platformio", "run", "-t", "upload"], decision="prompt", justification="flashes firmware to a connected device")
+prefix_rule(pattern=["platformio", "run", "--target", "upload"], decision="prompt", justification="flashes firmware to a connected device")
+prefix_rule(pattern=["pio", "run", "-t", "upload"], decision="prompt", justification="flashes firmware to a connected device")
+prefix_rule(pattern=["pio", "run", "--target", "upload"], decision="prompt", justification="flashes firmware to a connected device")
+prefix_rule(pattern=["avrdude"], decision="prompt", justification="programs AVR microcontrollers")
+prefix_rule(pattern=["esptool"], decision="prompt", justification="flashes ESP microcontrollers")
+prefix_rule(pattern=["esptool.py"], decision="prompt", justification="flashes ESP microcontrollers")
+prefix_rule(pattern=["st-flash"], decision="prompt", justification="flashes STM32 microcontrollers")
+prefix_rule(pattern=["dfu-util"], decision="prompt", justification="flashes devices over USB DFU")
+prefix_rule(pattern=["openocd"], decision="prompt", justification="programs/debugs hardware over JTAG/SWD")
