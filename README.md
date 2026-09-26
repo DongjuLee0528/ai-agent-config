@@ -35,16 +35,15 @@ Install all shared skills manually without modifying this repository. These comm
 
 Check existing entries with the same names before installing. The commands below report and preserve existing files or links instead of overwriting them. If Claudex Loop is already installed through the Claude Code marketplace, these symlinks will create duplicate skills; uninstall either the marketplace plugin or the symlinked copy before using them.
 
+`ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`, `ponytail-review`, and `frontend-design` are omitted because they are already provided by `ponytail@ponytail` and `frontend-design@claude-plugins-official`; linking these repository copies would create duplicates.
+
 ```sh
 mkdir -p ~/.claude/skills ~/.agents/skills
 for skill_path in \
   api-contract-review claudex-loop codex-build codex-review \
-  dual-agent-development embedded-security-review frontend-design graphify \
+  dual-agent-development embedded-security-review graphify \
   hardware-control-review hardware-debugging ml-data-model-review \
-  security-review software-debugging \
-  ponytail/skills/ponytail ponytail/skills/ponytail-audit \
-  ponytail/skills/ponytail-debt ponytail/skills/ponytail-gain \
-  ponytail/skills/ponytail-help ponytail/skills/ponytail-review
+  security-review software-debugging
 do
   skill_name=${skill_path##*/}
   for skill_root in "$HOME/.claude/skills" "$HOME/.agents/skills"; do
@@ -59,6 +58,10 @@ done
 ```
 
 To update the vendored copy, clone the upstream repository into a temporary directory, check out the desired commit, replace only the same three skill directories, copy the upstream `LICENSE`, preserve any applicable third-party notices, then update the pinned SHA in this README and `THIRD_PARTY_NOTICES.md`. Do not import the excluded paths, and verify the copied files byte-for-byte before review.
+
+## Project instruction templates
+
+Copy `templates/project-AGENTS.md` to `./AGENTS.md` in the project root and fill in only its project-specific placeholders. For Claude Code versions that do not load `AGENTS.md` directly, also copy `templates/project-CLAUDE.md` to `./CLAUDE.md` in the same directory. These destination names matter because Claude Code discovers `CLAUDE.md` by name and its `@AGENTS.md` directive imports a sibling file named exactly `AGENTS.md`.
 
 ## External Tools Not Included
 

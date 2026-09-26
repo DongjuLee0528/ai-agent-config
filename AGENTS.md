@@ -176,6 +176,9 @@
 
 ## 16. Completion and Reporting
 
+- After multi-step tasks or workflow/configuration changes, overwrite `.agent-notes/last-session.md` in the project root with a short summary of the task, files changed, verification and results, review verdict, open items, and suggested commit message.
+- Skip the session note for quick questions and trivial edits, and do not read it at session start unless the user asks.
+- If `.agent-notes/` is not ignored, suggest the exact `.gitignore` entry `.agent-notes/` instead of editing `.gitignore` without permission.
 - Do not claim that a task is complete while known blocking issues remain.
 - Clearly distinguish between:
   - completed work,
