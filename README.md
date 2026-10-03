@@ -31,7 +31,7 @@ The vendored copy is pinned to `8cf5e2c1771c5151d90c12642391d0ba8fa71b0e` and in
 
 In hardware or robotics projects, no `PROOF_CMD` or builder-run command may upload firmware, actuate hardware, drive GPIO/PWM/relays, reset devices, or otherwise interact with physical hardware. Run `hardware-control-review` before physical testing, which still requires explicit user approval.
 
-Install all shared skills manually without modifying this repository. These commands assume the repository is cloned at `~/ai-agent-config`; if it is elsewhere, replace `$HOME/ai-agent-config` with the repository's actual absolute path.
+On macOS or Linux, install all shared skills manually without modifying this repository. Native Windows users should use the PowerShell section below instead. These commands assume the repository is cloned at `~/ai-agent-config`; if it is elsewhere, replace `$HOME/ai-agent-config` with the repository's actual absolute path.
 
 Check existing entries with the same names before installing. The commands below report and preserve existing files or links instead of overwriting them. If Claudex Loop is already installed through the Claude Code marketplace, these symlinks will create duplicate skills; uninstall either the marketplace plugin or the symlinked copy before using them.
 
@@ -62,6 +62,38 @@ To update the vendored copy, clone the upstream repository into a temporary dire
 ## Project instruction templates
 
 Copy `templates/project-AGENTS.md` to `./AGENTS.md` in the project root and fill in only its project-specific placeholders. For Claude Code versions that do not load `AGENTS.md` directly, also copy `templates/project-CLAUDE.md` to `./CLAUDE.md` in the same directory. These destination names matter because Claude Code discovers `CLAUDE.md` by name and its `@AGENTS.md` directive imports a sibling file named exactly `AGENTS.md`.
+
+## Native Windows setup (PowerShell)
+
+The shared rules and skills are the same on macOS and Windows. Run these steps in Windows PowerShell, not WSL. Install Git for Windows and the native Claude Code and Codex CLIs first. Claude Code uses Git Bash on Windows for its Bash tool; the PowerShell hardware hook also handles its PowerShell tool. Keep the repository at `%USERPROFILE%\ai-agent-config`, matching the shared `CLAUDE.md` import.
+
+```powershell
+git clone https://github.com/DongjuLee0528/ai-agent-config.git "$HOME\ai-agent-config"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$HOME\ai-agent-config\harness\install-windows.ps1"
+```
+
+Run the installer once per Windows user. It creates junctions for the 12 shared skills under `~/.claude/skills` and `~/.agents/skills`, merges Claude's deny rules and PowerShell hook into `~/.claude/settings.json`, and copies the Codex rules and review profile. Existing skill entries, hook files, Codex rules, and review profiles are left in place with warnings. The installer does not modify this repository. Ponytail and Frontend Design still need to be installed separately through their plugins, as on macOS.
+
+Edit `~/.codex/config.toml` manually. Put these top-level keys before any TOML table, preserving existing values if already configured:
+
+```toml
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+
+[windows]
+sandbox = "elevated"
+```
+
+If a `[windows]` table already exists, add only its missing `sandbox` key. The `elevated` native Windows sandbox is recommended by Codex; use `unelevated` only when the elevated setup is unavailable. Restart both CLIs after installing. In Claude Code, check `/hooks`; in Codex, check that the rules load and use `codex --profile review` when a higher-effort review session is needed. The protection rules are command-pattern guards, not a substitute for either tool's sandbox.
+
+Smoke-test the installed hook without touching hardware. The first command should print JSON containing `"permissionDecision":"deny"`; the second should print nothing:
+
+```powershell
+'{"tool_name":"Bash","tool_input":{"command":"arduino-cli upload"}}' | powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$HOME\.claude\hooks\block-hardware-commands.ps1"
+'{"tool_name":"Bash","tool_input":{"command":"git status"}}' | powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$HOME\.claude\hooks\block-hardware-commands.ps1"
+```
+
+The `dual-agent-development` reviewer scripts remain Bash scripts. Git for Windows supplies Bash: open Git Bash in the project and call the relevant `review-with-*.sh` script there. The `claudex-loop` runner is Python and already resolves native Windows CLI shims. Use Python 3.10+ for that workflow.
 
 ## External Tools Not Included
 
@@ -94,7 +126,7 @@ Claude Code's `permissions.deny` list allows gitignore-style `!` negation entrie
 
 Codex's `prompt` rules assume an approval policy that can actually prompt (e.g. `approval_policy = "on-request"`, the default this harness sets). Under `approval_policy = "never"` — set explicitly by some callers, such as claudex-loop builder runs (`skills/claudex-loop/scripts/runner.py` passes `-c approval_policy="never"`) — Codex has no prompt to fall back to: a command that would otherwise be a `prompt` decision is rejected outright instead of asked about, and a sandbox-escaping write such as `/dev/tty*` under `sandbox_mode = "workspace-write"` fails instead of falling through to approval. Either way the action doesn't run, just without a chance to approve it in the moment.
 
-### Install / merge steps
+### Install / merge steps (macOS/Linux)
 
 Run these yourself; nothing here is applied for you.
 
