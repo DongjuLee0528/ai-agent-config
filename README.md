@@ -11,6 +11,8 @@ This repository contains two kinds of material:
 
 External project copyrights remain with their original copyright holders. This repository preserves third-party license texts and records source, version, and modification status in `THIRD_PARTY_NOTICES.md`.
 
+Locally authored materials are covered by the repository's [Personal and Research Use License](LICENSE). That license permits personal, educational, academic, and non-commercial research use. Commercial use requires prior written permission. It does not override any license attached to third-party or vendored materials.
+
 ## Included Third-Party Skills
 
 | Project | Local path | Source | License |
@@ -23,7 +25,7 @@ Ponytail is included as a vendored and locally modified copy, not as a complete 
 
 Frontend Design is included from the locally installed Claude plugin cache at commit `1df77764d7a936af30b51578b0c15fc5e8183715`. Only the skill file and its `LICENSE.txt` are included under `skills/frontend-design/`. The copied skill license is preserved at `skills/frontend-design/LICENSE.txt`; the plugin root Apache-2.0 license text is preserved at `licenses/frontend-design-LICENSE.txt`.
 
-`unslop` is an independently authored shared skill in `skills/unslop`. It reviews code, documentation, UI, and copy for generic AI-like choices and refines them toward the project's actual context. It does not promise to evade provenance or AI-detection systems, and it does not modify files without authorization.
+`unslop` is an independently authored shared skill in `skills/unslop`. It reviews code, documentation, UI, and copy for generic AI-like choices and refines them toward the project's actual context. It does not promise to evade provenance or AI-detection systems, and it does not modify files without authorization. It is covered by the repository's local-authored-materials license.
 
 ## Claudex Loop
 
