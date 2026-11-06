@@ -11,7 +11,7 @@ This repository contains two kinds of material:
 
 External project copyrights remain with their original copyright holders. This repository preserves third-party license texts and records source, version, and modification status in `THIRD_PARTY_NOTICES.md`.
 
-Locally authored materials are covered by the repository's [Personal and Research Use License](LICENSE). That license permits personal, educational, academic, and non-commercial research use. Commercial use requires prior written permission. It does not override any license attached to third-party or vendored materials.
+Locally authored materials, including `AGENTS.md`, locally authored shared skills, and repository documentation identified as locally authored, are covered by the repository's [Personal and Research Use License](LICENSE). That license permits personal, educational, academic, and non-commercial research use. Commercial use requires prior written permission. External or vendored skills are not covered by this license: they remain governed by the original project licenses and notices recorded below.
 
 ## Included Third-Party Skills
 
