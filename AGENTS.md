@@ -205,7 +205,14 @@
 - Ask whether to keep `PLAN.md` and `PLAN-REVIEW-LOG.md` in Git. If not, recommend those exact `.gitignore` entries.
 - In hardware or robotics projects, no proof or builder command may upload firmware, actuate hardware, drive GPIO, PWM, or relays, reset devices, or otherwise interact with physical hardware. Hardware-control changes require `hardware-control-review` before physical testing, and physical tests require explicit user approval.
 
-## 18. Conflict Resolution
+## 18. Shared Skill Routing
+
+- AI-generated code, documentation, UI, or copy that feels generic or overdone: use `unslop`.
+- Visual UI/UX design: use `frontend-design`; use `unslop` alongside it when the result needs anti-template refinement.
+- Actual Figma file reads or writes: use the official Codex Figma plugin's `figma-use` skill. It is not vendored in this repository.
+- Do not automatically apply `unslop` or `figma-use` to unrelated work.
+
+## 19. Conflict Resolution
 
 When instructions or principles conflict, use the following priority:
 
