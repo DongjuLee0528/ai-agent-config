@@ -6,7 +6,7 @@ Shared AI agent instructions, skills, and routing rules for local development.
 
 This repository contains two kinds of material:
 
-- Locally authored shared rules and skills: `AGENTS.md` and the top-level shared skills under `skills/*/SKILL.md`, including `graphify`, `software-debugging`, `api-contract-review`, `security-review`, hardware review/debugging, ML review, and dual-agent workflow guidance.
+- Locally authored shared rules and skills: `AGENTS.md` and the top-level shared skills under `skills/*/SKILL.md`, including `unslop`, `graphify`, `software-debugging`, `api-contract-review`, `security-review`, hardware review/debugging, ML review, and dual-agent workflow guidance.
 - Third-party public skills used from this configuration: Ponytail, Frontend Design, and Claudex Loop.
 
 External project copyrights remain with their original copyright holders. This repository preserves third-party license texts and records source, version, and modification status in `THIRD_PARTY_NOTICES.md`.
@@ -23,6 +23,8 @@ Ponytail is included as a vendored and locally modified copy, not as a complete 
 
 Frontend Design is included from the locally installed Claude plugin cache at commit `1df77764d7a936af30b51578b0c15fc5e8183715`. Only the skill file and its `LICENSE.txt` are included under `skills/frontend-design/`. The copied skill license is preserved at `skills/frontend-design/LICENSE.txt`; the plugin root Apache-2.0 license text is preserved at `licenses/frontend-design-LICENSE.txt`.
 
+`unslop` is an independently authored shared skill in `skills/unslop`. It reviews code, documentation, UI, and copy for generic AI-like choices and refines them toward the project's actual context. It does not promise to evade provenance or AI-detection systems, and it does not modify files without authorization.
+
 ## Claudex Loop
 
 Claudex Loop hardens plans through independent Claude/Codex review before an optional build and final cross-inspection. Use it for larger features, multi-module changes, or significant design decisions; keep `dual-agent-development` as the default for scoped bug fixes, targeted features, refactors, tests, and configuration changes.
@@ -35,7 +37,7 @@ On macOS or Linux, install all shared skills manually without modifying this rep
 
 Check existing entries with the same names before installing. The commands below report and preserve existing files or links instead of overwriting them. If Claudex Loop is already installed through the Claude Code marketplace, these symlinks will create duplicate skills; uninstall either the marketplace plugin or the symlinked copy before using them.
 
-`ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`, `ponytail-review`, and `frontend-design` are omitted because they are already provided by `ponytail@ponytail` and `frontend-design@claude-plugins-official`; linking these repository copies would create duplicates.
+`ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`, `ponytail-review`, and `frontend-design` are omitted because they are already provided by `ponytail@ponytail` and `frontend-design@claude-plugins-official`; linking these repository copies would create duplicates. `figma-use` is also not linked from this repository: it is provided by the official Codex Figma plugin and is governed by Figma Developer Terms.
 
 ```sh
 mkdir -p ~/.claude/skills ~/.agents/skills
@@ -43,7 +45,7 @@ for skill_path in \
   api-contract-review claudex-loop codex-build codex-review \
   dual-agent-development embedded-security-review graphify \
   hardware-control-review hardware-debugging ml-data-model-review \
-  security-review software-debugging
+  security-review software-debugging unslop
 do
   skill_name=${skill_path##*/}
   for skill_root in "$HOME/.claude/skills" "$HOME/.agents/skills"; do
@@ -72,7 +74,7 @@ git clone https://github.com/DongjuLee0528/ai-agent-config.git "$HOME\ai-agent-c
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$HOME\ai-agent-config\harness\install-windows.ps1"
 ```
 
-Run the installer once per Windows user. It creates junctions for the 12 shared skills under `~/.claude/skills` and `~/.agents/skills`, merges Claude's deny rules and PowerShell hook into `~/.claude/settings.json`, and copies the Codex rules and review profile. Existing skill entries, hook files, Codex rules, and review profiles are left in place with warnings. The installer does not modify this repository. Ponytail and Frontend Design still need to be installed separately through their plugins, as on macOS.
+Run the installer once per Windows user. It creates junctions for the 13 shared skills under `~/.claude/skills` and `~/.agents/skills`, merges Claude's deny rules and PowerShell hook into `~/.claude/settings.json`, and copies the Codex rules and review profile. Existing skill entries, hook files, Codex rules, and review profiles are left in place with warnings. The installer does not modify this repository. Ponytail, Frontend Design, and Figma use still need to be provided separately through their official plugins, as on macOS.
 
 Edit `~/.codex/config.toml` manually. Put these top-level keys before any TOML table, preserving existing values if already configured:
 
@@ -98,6 +100,10 @@ The `dual-agent-development` reviewer scripts remain Bash scripts. Git for Windo
 ## External Tools Not Included
 
 Graphify is not included as a program, package, generated graph, index, cache, or project configuration. `skills/graphify/SKILL.md` is an independently authored wrapper that documents when and how to use project-local Graphify safely. Graphify source is https://github.com/Graphify-Labs/graphify and is licensed under Apache-2.0. The verified upstream Apache-2.0 license, MIT legacy license, and notice texts are preserved for reference at `licenses/graphify-LICENSE`, `licenses/graphify-LICENSE-MIT`, and `licenses/graphify-NOTICE`.
+
+## Figma Plugin Dependency
+
+`figma-use` is not copied into this repository. It is supplied by the official OpenAI Codex Figma plugin and its related files are governed by the [Figma Developer Terms](https://www.figma.com/legal/developer-terms/), not by this repository's locally authored skill guidance. Use the plugin's `figma-use` prerequisite before calling Figma tools. This repository contains no Figma plugin source, references, credentials, or integration data.
 
 ## Harness
 
