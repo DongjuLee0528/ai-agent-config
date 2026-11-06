@@ -4,7 +4,7 @@ Copyright (c) 2026 Dongju Lee
 
 ## 1. Scope
 
-This license applies only to the locally authored materials in this repository, as identified in the README and repository documentation. It does not apply to third-party or vendored materials, which remain governed by their own license terms and notices.
+This license applies only to materials authored by Dongju Lee in this repository, including `AGENTS.md`, the locally authored top-level skills under `skills/*/SKILL.md`, and repository documentation that is identified as locally authored in the README. It does not apply to third-party or vendored materials, which remain governed by their own license terms and notices.
 
 ## 2. Permission
 
