@@ -4,7 +4,7 @@ $skills = @(
     'api-contract-review', 'claudex-loop', 'codex-build', 'codex-review',
     'dual-agent-development', 'embedded-security-review', 'graphify',
     'hardware-control-review', 'hardware-debugging', 'ml-data-model-review',
-    'security-review', 'software-debugging'
+    'security-review', 'software-debugging', 'unslop'
 )
 
 foreach ($root in @((Join-Path $HOME '.claude\skills'), (Join-Path $HOME '.agents\skills'))) {
