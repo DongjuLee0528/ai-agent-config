@@ -2,6 +2,8 @@
 
 This file records third-party skills and external tools referenced by this repository. Third-party copyrights remain with their original owners.
 
+This file records third-party materials only. Locally authored repository rules and skills are covered by the root `LICENSE`; that license does not replace or modify any third-party license listed below.
+
 ## Ponytail
 
 - Name: Ponytail
