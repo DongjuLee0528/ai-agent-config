@@ -47,7 +47,7 @@ for skill_path in \
   api-contract-review claudex-loop codex-build codex-review \
   dual-agent-development embedded-security-review graphify \
   hardware-control-review hardware-debugging ml-data-model-review \
-  security-review software-debugging unslop
+  security-review software-debugging unslop context7 21st-dev
 do
   skill_name=${skill_path##*/}
   for skill_root in "$HOME/.claude/skills" "$HOME/.agents/skills"; do
@@ -76,7 +76,7 @@ git clone https://github.com/DongjuLee0528/ai-agent-config.git "$HOME\ai-agent-c
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$HOME\ai-agent-config\harness\install-windows.ps1"
 ```
 
-Run the installer once per Windows user. It creates junctions for the 13 shared skills under `~/.claude/skills` and `~/.agents/skills`, merges Claude's deny rules and PowerShell hook into `~/.claude/settings.json`, and copies the Codex rules and review profile. Existing skill entries, hook files, Codex rules, and review profiles are left in place with warnings. The installer does not modify this repository. Ponytail, Frontend Design, and Figma use still need to be provided separately through their official plugins, as on macOS.
+Run the installer once per Windows user. It creates junctions for the 15 shared skills under `~/.claude/skills` and `~/.agents/skills`, merges Claude's deny rules and PowerShell hook into `~/.claude/settings.json`, and copies the Codex rules and review profile. Existing skill entries, hook files, Codex rules, and review profiles are left in place with warnings. The installer does not modify this repository. Ponytail, Frontend Design, and Figma use still need to be provided separately through their official plugins, as on macOS.
 
 Edit `~/.codex/config.toml` manually. Put these top-level keys before any TOML table, preserving existing values if already configured:
 
@@ -98,6 +98,12 @@ Smoke-test the installed hook without touching hardware. The first command shoul
 ```
 
 The `dual-agent-development` reviewer scripts remain Bash scripts. Git for Windows supplies Bash: open Git Bash in the project and call the relevant `review-with-*.sh` script there. The `claudex-loop` runner is Python and already resolves native Windows CLI shims. Use Python 3.10+ for that workflow.
+
+## Context7 and 21st.dev
+
+`skills/context7` and `skills/21st-dev` are locally authored companion skills, installed through the same shared-skill links or Windows junctions above. Context7 supports dependency documentation lookup; 21st.dev supports component discovery and adaptation alongside `frontend-design`.
+
+These skills do not bundle MCP servers, install packages, or authenticate accounts. Connect the services separately using the current official [Context7 installation guide](https://context7.com/docs/installation) and [21st setup guide](https://21st.dev/mcp). Avoid duplicate registrations if an official plugin already supplies the service or equivalent skills. Keep API keys and local authentication outside this repository. No upstream skill source is vendored by these additions.
 
 ## External Tools Not Included
 
