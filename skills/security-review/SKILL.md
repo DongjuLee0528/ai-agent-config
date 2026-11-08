@@ -9,7 +9,9 @@ description: Use for analysis-only security reviews of web applications, APIs, s
 
 Perform strict, evidence-based security reviews of web applications, APIs, backend services, frontend applications, databases, authentication systems, deployment configuration, containers, CI/CD configuration, and cloud-facing application components.
 
-This workflow is analysis-only by default. It never automatically fixes a vulnerability and never automatically invokes `dual-agent-development`. Permission to review security is not permission to exploit, modify, attack, or remediate.
+For a user-controlled local application, a security-check request also activates `strix` for bounded local testing under that skill's isolation, scope, provider, and budget rules. Explicit code-only requests remain static reviews. This local testing authorization takes precedence over the general active-test approval rules below; source fixes still require authorization.
+
+This workflow is analysis-only by default. It never automatically fixes a vulnerability and never automatically invokes `dual-agent-development`. Outside the bounded local Strix scope above, permission to review security is not permission to exploit, modify, attack, or remediate.
 
 ---
 
@@ -23,7 +25,7 @@ If the user explicitly requests implementation or a fix without asking for revie
 
 # 2. Review Boundary
 
-Analysis only by default. Do not:
+Analysis only by default, except for bounded local testing through `strix` as defined above. Do not:
 
 - modify source code, configuration, or infrastructure files,
 - modify dependency versions or lock files,
@@ -135,6 +137,8 @@ Rate-limit gaps, resource exhaustion, unbounded queries, expensive endpoints, up
 ---
 
 # 7. Security Testing Safety
+
+The local Strix exception in the Purpose section applies to this section, including test-data mutation and focused retests within its established scope. All other active tests follow the rules below.
 
 Automatically allowed when safe: source inspection, configuration inspection, dependency inspection, `git status`, `git diff`, static analysis, build, non-destructive existing tests, offline analysis.
 
