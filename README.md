@@ -47,7 +47,7 @@ for skill_path in \
   api-contract-review claudex-loop codex-build codex-review \
   dual-agent-development embedded-security-review graphify \
   hardware-control-review hardware-debugging ml-data-model-review \
-  security-review software-debugging unslop context7 21st-dev
+  security-review software-debugging unslop context7 21st-dev strix
 do
   skill_name=${skill_path##*/}
   for skill_root in "$HOME/.claude/skills" "$HOME/.agents/skills"; do
@@ -76,7 +76,7 @@ git clone https://github.com/DongjuLee0528/ai-agent-config.git "$HOME\ai-agent-c
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$HOME\ai-agent-config\harness\install-windows.ps1"
 ```
 
-Run the installer once per Windows user. It creates junctions for the 15 shared skills under `~/.claude/skills` and `~/.agents/skills`, merges Claude's deny rules and PowerShell hook into `~/.claude/settings.json`, and copies the Codex rules and review profile. Existing skill entries, hook files, Codex rules, and review profiles are left in place with warnings. The installer does not modify this repository. Ponytail, Frontend Design, and Figma use still need to be provided separately through their official plugins, as on macOS.
+Run the installer once per Windows user. It creates junctions for the 16 shared skills under `~/.claude/skills` and `~/.agents/skills`, merges Claude's deny rules and PowerShell hook into `~/.claude/settings.json`, and copies the Codex rules and review profile. Existing skill entries, hook files, Codex rules, and review profiles are left in place with warnings. The installer does not modify this repository. Ponytail, Frontend Design, and Figma use still need to be provided separately through their official plugins, as on macOS.
 
 Edit `~/.codex/config.toml` manually. Put these top-level keys before any TOML table, preserving existing values if already configured:
 
@@ -98,6 +98,10 @@ Smoke-test the installed hook without touching hardware. The first command shoul
 ```
 
 The `dual-agent-development` reviewer scripts remain Bash scripts. Git for Windows supplies Bash: open Git Bash in the project and call the relevant `review-with-*.sh` script there. The `claudex-loop` runner is Python and already resolves native Windows CLI shims. Use Python 3.10+ for that workflow.
+
+## Strix local security testing
+
+`skills/strix` is a locally authored companion workflow for the separately installed [Strix CLI](https://github.com/usestrix/strix). A security-check request combines `security-review` with bounded testing of an identifiable user-controlled local test app; explicit code-only review remains static. It uses disposable source copies and data, checks external integrations, and respects configured LLM privacy and spending limits. The skill does not install Strix, Docker, credentials, or an MCP server, and does not use Strix Cloud. Local execution may still send context to the configured LLM provider. Missing prerequisites are reported without blocking code review.
 
 ## Context7 and 21st.dev
 
